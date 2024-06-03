@@ -6,174 +6,211 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 const pool = new Pool({
-  user: "your_db_user", // Replace with your database user
-  password: "your_db_password", // Replace with your database password
+  user: "postgres",
+  password: "imdoinggreat", // Replace with your database password
   host: "localhost",
-  database: "employees_db", // Replace with your database name
+  database: "employees_db",
 });
+async function main() {
+  while (true) {
+    const { action } = await inquirer.prompt([
+      {
+        type: "list",
+        name: "action",
+        message: "What would you like to do?",
+        choices: [
+          "View All Employees",
+          "Add Employee",
+          "Update Employee Role",
+          "View All Roles",
+          "Add Role",
+          "View All Departments",
+          "Add Department",
+          "Quit",
+        ],
+      },
+    ]);
 
-const startApp = async () => {
-  const { action } = await inquirer.prompt([
-    {
-      type: "list",
-      message: "What would you like to do?",
-      name: "action",
-      choices: [
-        "View All Employees",
-        "Add Employee",
-        "Update Employee Role",
-        "View All Roles",
-        "Add Role",
-        "View All Departments",
-        "Add Department",
-      ],
-    },
-  ]);
+    switch (action) {
+      case "View All Employees":
+        const employees = await getEmployees();
+        console.table(employees);
+        break;
+      case "Add Employee":
+        const { firstName } = await inquirer.prompt([
+          {
+            type: "input",
+            name: "firstName",
+            message: "What is the employee's first name?",
+          },
+        ]);
 
-  switch (action) {
-    case "View All Employees":
-      viewAllEmployees();
-      break;
-    case "Add Employee":
-      addEmployee();
-      break;
-    case "Update Employee Role":
-      updateEmployeeRole();
-      break;
-    case "View All Roles":
-      viewAllRoles();
-      break;
-    case "Add Role":
-      addRole();
-      break;
-    case "View All Departments":
-      viewAllDepartments();
-      break;
-    case "Add Department":
-      addDepartment();
-      break;
-    default:
-      console.log("Invalid action");
-      break;
+        const { lastName } = await inquirer.prompt([
+          {
+            type: "input",
+            name: "lastName",
+            message: "What is the employee's last name?",
+          },
+        ]);
+
+        const roles = await getRoles();
+        const { roleId } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "roleId",
+            message: "What is the employee's role?",
+            choices: roles.map((role) => ({
+              name: role.title,
+              value: role.id,
+            })),
+          },
+        ]);
+
+        const managers = await getEmployees();
+        const { managerId } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "managerId",
+            message: "Who is the employee's manager?",
+            choices: managers.map((manager) => ({
+              name: `${manager.first_name} ${manager.last_name}`,
+              value: manager.id,
+            })),
+          },
+        ]);
+
+        await addEmployee(firstName, lastName, roleId, managerId);
+        break;
+      case "Update Employee Role":
+        const employeesToUpdate = await getEmployees();
+        const { employeeId } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "employeeId",
+            message: "Which employee's role do you want to update?",
+            choices: employeesToUpdate.map((employee) => ({
+              name: `${employee.first_name} ${employee.last_name}`,
+              value: employee.id,
+            })),
+          },
+        ]);
+
+        const rolesToUpdate = await getRoles();
+        const { newRoleId } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "newRoleId",
+            message: "Which role do you want to assign the selected employee?",
+            choices: rolesToUpdate.map((role) => ({
+              name: role.title,
+              value: role.id,
+            })),
+          },
+        ]);
+
+        await updateEmployeeRole(employeeId, newRoleId);
+        break;
+
+      case "View All Roles":
+        const rolesToView = await getRoles();
+        console.table(rolesToView);
+        break;
+
+      case "Add Role":
+        const { roleName } = await inquirer.prompt([
+          {
+            type: "input",
+            name: "roleName",
+            message: "What is the name of the role?",
+          },
+        ]);
+
+        const { salary } = await inquirer.prompt([
+          {
+            type: "number",
+            name: "salary",
+            message: "What is the salary of the role?",
+          },
+        ]);
+
+        const departmentsToUpdate = await getDepartments();
+        const { departmentId } = await inquirer.prompt([
+          {
+            type: "list",
+            name: "departmentId",
+            message: "Which department does this role belong to?",
+            choices: departmentsToUpdate.map((department) => ({
+              name: `${department.name}`,
+              value: department.id,
+            })),
+          },
+        ]);
+
+        await addRole(roleName, salary, departmentId);
+        break;
+      case "View All Departments":
+        const departmentsToView = await getDepartments();
+        console.table(departmentsToView);
+        break;
+      case "Add Department":
+        const { departmentName } = await inquirer.prompt([
+          {
+            type: "input",
+
+            name: "departmentName",
+            message: "What is the name of the department?",
+          },
+        ]);
+
+        await addDepartment(departmentName);
+        break;
+      case "Quit":
+        process.exit(0);
+        break;
+    }
   }
-};
+}
 
-const viewAllDepartments = async () => {
-  const res = await pool.query("SELECT * FROM departments");
-  console.table(res.rows);
-  startApp();
-};
+async function getEmployees() {
+  const result = await pool.query("SELECT * FROM employees");
+  return result.rows;
+}
 
-const viewAllRoles = async () => {
-  const res = await pool.query("SELECT * FROM roles");
-  console.table(res.rows);
-  startApp();
-};
-
-const viewAllEmployees = async () => {
-  const res = await pool.query("SELECT * FROM employees");
-  console.table(res.rows);
-  startApp();
-};
-
-const addDepartment = async () => {
-  const { name } = await inquirer.prompt([
-    {
-      type: "input",
-      message: "What is the name of the department?",
-      name: "department",
-    },
-  ]);
-  await pool.query("INSERT INTO departments (department_name) VALUES ($1)", [
-    name,
-  ]);
-  console.log(`Added ${name} to the database`);
-  startApp();
-};
-
-const addRole = async () => {
-  const { title, salary, departmentId } = await inquirer.prompt([
-    {
-      type: "input",
-      message: "What is the name of the role?",
-      name: "role",
-    },
-    {
-      type: "input",
-      message: "What is the salary of the role?",
-      name: "salary",
-    },
-    {
-      type: "input",
-      message: "Which department does the role belong to?",
-      name: "departmentId",
-    },
-  ]);
-  await pool.query(
-    "INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)",
-    [title, salary, departmentId]
-  );
-  console.log(`Added ${title} to the database`);
-  startApp();
-};
-
-const addEmployee = async () => {
-  const { firstName, lastName, roleId, managerId } = await inquirer.prompt([
-    {
-      type: "input",
-      message: "What is the employee's first name?",
-      name: "firstName",
-    },
-    {
-      type: "input",
-      message: "What is the employee's last name?",
-      name: "lastName",
-    },
-    {
-      type: "input",
-      message: "What is the employee's role?",
-      name: "roleId",
-    },
-    {
-      type: "input",
-      message: "Who is the employee's manager?",
-      name: "managerName",
-    },
-  ]);
+async function addEmployee(firstName, lastName, roleId, managerId) {
   await pool.query(
     "INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)",
-    [firstName, lastName, roleId, managerName || null]
+    [firstName, lastName, roleId, managerId]
   );
-  console.log(`Added ${firstName} ${lastName} to the database`);
-  startApp();
-};
+}
 
-const updateEmployeeRole = async () => {
-  const { employeeId, newRoleId } = await inquirer.prompt([
-    {
-      type: "input",
-      message: "Which employee's role do you want to update?",
-      name: "employeeName",
-    },
-    {
-      type: "input",
-      message: "Which role do you want to assign the selected employee?",
-      name: "newRole",
-    },
-  ]);
+async function updateEmployeeRole(employeeId, newRoleId) {
   await pool.query("UPDATE employees SET role_id = $1 WHERE id = $2", [
-    newRole,
-    employeeName,
+    newRoleId,
+    employeeId,
   ]);
-  console.log(`Updated employee's role`);
-  startApp();
-};
+}
 
-pool.connect((err) => {
-  if (err) throw err;
-  console.log("Connected to the database.");
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    startApp();
-  });
-});
+async function getRoles() {
+  const result = await pool.query("SELECT * FROM roles");
+  return result.rows;
+}
+
+async function addRole(roleName, salary, departmentId) {
+  await pool.query(
+    "INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)",
+    [roleName, salary, departmentId]
+  );
+}
+
+async function getDepartments() {
+  const result = await pool.query("SELECT * FROM departments");
+  return result.rows;
+}
+
+async function addDepartment(departmentName) {
+  await pool.query("INSERT INTO departments (name) VALUES ($1)", [
+    departmentName,
+  ]);
+}
+
+main();

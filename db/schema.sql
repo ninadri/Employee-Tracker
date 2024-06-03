@@ -1,7 +1,7 @@
 DROP DATABASE IF EXISTS employees_db;
 CREATE DATABASE employees_db;
 
-\c employees;
+\c employees_db;
 
 CREATE TABLE departments (
     id SERIAL PRIMARY KEY,
@@ -16,12 +16,12 @@ CREATE TABLE roles (
     FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE SET NULL
 );
 
-CREATE TABLE employee (
+CREATE TABLE employees (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(30) NOT NULL,
     last_name VARCHAR(30) NOT NULL,
     role_id INTEGER NOT NULL,
     manager_id INTEGER,
     FOREIGN KEY (role_id) REFERENCES roles (id),
-    FOREIGN KEY (manager_id) REFERENCES employee (id)
+    FOREIGN KEY (manager_id) REFERENCES employees (id)
 );
