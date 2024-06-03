@@ -180,6 +180,7 @@ async function addEmployee(firstName, lastName, roleId, managerId) {
     "INSERT INTO employees (first_name, last_name, role_id, manager_id) VALUES ($1, $2, $3, $4)",
     [firstName, lastName, roleId, managerId]
   );
+  console.log(`Added ${firstName} ${lastName} to the database`);
 }
 
 async function updateEmployeeRole(employeeId, newRoleId) {
@@ -187,6 +188,7 @@ async function updateEmployeeRole(employeeId, newRoleId) {
     newRoleId,
     employeeId,
   ]);
+  console.log(`Added employee role.`);
 }
 
 async function getRoles() {
@@ -201,7 +203,7 @@ async function addRole(roleName, salary, departmentId) {
     const values = [roleName, salary, departmentId];
 
     await pool.query(query, values);
-    console.log("Role added successfully");
+    console.log(`${roleName} added successfully`);
   } catch (err) {
     console.error("Error executing query", err.stack);
   }

@@ -32,6 +32,10 @@ THEN I am prompted to select an employee to update and their new role and this i
 
 ## Mock-Up
 
+The following video shows an example of the application being used from the command line:
+
+[![A video thumbnail shows the command-line employee management application with a play button overlaying the view.](./Assets/svg-walkthrough.png)](https://drive.google.com/file/d/1SsaIj1rGqODizgnWkav5QfEwuYkHr3YA/view?usp=sharing)
+
 ## Installation
 
 To use schema, open a terminal inside of the folder with the schema.sql file is and enter the following commands:
