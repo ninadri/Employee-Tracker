@@ -32,7 +32,43 @@ THEN I am prompted to select an employee to update and their new role and this i
 
 ## Mock-Up
 
----
+## Installation
+
+To use schema, open a terminal inside of the folder with the schema.sql file is and enter the following commands:
+
+Log into postgres with:
+
+```bash
+psql -U postgres
+```
+
+Import the schema and seeds:
+
+```bash
+\i schema.sql
+```
+
+```bash
+\i seeds.sql
+```
+
+Then quit:
+
+```bash
+\q
+```
+
+Then go into your prooject folder and install the packages with
+
+```bash
+npm i
+```
+
+and then start our server and answer the following questions:
+
+```bash
+npm run start
+```
 
 ## License
 

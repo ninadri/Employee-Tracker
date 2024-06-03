@@ -153,16 +153,15 @@ async function main() {
         console.table(departmentsToView);
         break;
       case "Add Department":
-        const { departmentName } = await inquirer.prompt([
+        const { newDepartment } = await inquirer.prompt([
           {
             type: "input",
-
-            name: "departmentName",
+            name: "newDepartment",
             message: "What is the name of the department?",
           },
         ]);
 
-        await addDepartment(departmentName);
+        await addDepartment(newDepartment);
         break;
       case "Quit":
         process.exit(0);
@@ -196,10 +195,16 @@ async function getRoles() {
 }
 
 async function addRole(roleName, salary, departmentId) {
-  await pool.query(
-    "INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)",
-    [roleName, salary, departmentId]
-  );
+  try {
+    const query =
+      "INSERT INTO roles (title, salary, department_id) VALUES ($1, $2, $3)";
+    const values = [roleName, salary, departmentId];
+
+    await pool.query(query, values);
+    console.log("Role added successfully");
+  } catch (err) {
+    console.error("Error executing query", err.stack);
+  }
 }
 
 async function getDepartments() {
@@ -207,10 +212,16 @@ async function getDepartments() {
   return result.rows;
 }
 
-async function addDepartment(departmentName) {
-  await pool.query("INSERT INTO departments (name) VALUES ($1)", [
-    departmentName,
-  ]);
+async function addDepartment(newDepartment) {
+  try {
+    const query = "INSERT INTO departments (name) VALUES ($1)";
+    const values = [newDepartment];
+
+    await pool.query(query, values);
+    console.log(`Added ${newDepartment} to the database`);
+  } catch (err) {
+    console.error("Error executing query", err.stack);
+  }
 }
 
 main();
