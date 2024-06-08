@@ -7,10 +7,12 @@ const PORT = process.env.PORT || 3001;
 
 const pool = new Pool({
   user: "postgres",
-  password: "imdoinggreat", // Replace with your database password
+  password: "", // Replace with your database password
   host: "localhost",
   database: "employees_db",
 });
+
+// Prompts the user with list of actions
 async function main() {
   while (true) {
     const { action } = await inquirer.prompt([
